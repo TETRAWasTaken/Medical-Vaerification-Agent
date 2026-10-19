@@ -1,0 +1,143 @@
+{
+  "PAT-101": {
+    "patient_id": "PAT-101",
+    "name": "Eleanor Vance",
+    "gender": "Female",
+    "age": 54,
+    "archetype": "Clean Eligible",
+    "clinical_summary": "54-year-old female with diagnosed stage IIIB non-small cell lung cancer (adenocarcinoma) with stable metabolic status. Well-preserved renal parameters and normal coagulation.",
+    "vitals": {
+      "blood_pressure": "124/78 mmHg",
+      "heart_rate": 72,
+      "bmi": 26.4
+    },
+    "labs": {
+      "egfr": 78.5,
+      "platelets": 245000,
+      "hba1c": 6.8,
+      "uacr": 340.0,
+      "serum_creatinine": 0.9,
+      "potassium": 4.3,
+      "alt": 22,
+      "ast": 24
+    },
+    "diagnoses": [
+      {
+        "code": "C34.90",
+        "system": "ICD-10",
+        "display": "Malignant neoplasm of unsp part of bronchus or lung"
+      },
+      {
+        "code": "E11.9",
+        "system": "ICD-10",
+        "display": "Type 2 diabetes mellitus without complications"
+      }
+    ],
+    "ecog": 1,
+    "medications": [
+      "Metformin 500mg BID",
+      "Atorvastatin 20mg daily",
+      "Lisinopril 10mg daily"
+    ],
+    "history": {
+      "brain_metastases": false,
+      "type_1_diabetes": false,
+      "history_ketoacidosis": false,
+      "active_infection": false
+    }
+  },
+  "PAT-202": {
+    "patient_id": "PAT-202",
+    "name": "Marcus Holloway",
+    "gender": "Male",
+    "age": 63,
+    "archetype": "Borderline Renal Failure",
+    "clinical_summary": "63-year-old male with metastatic colorectal carcinoma undergoing prior second-line therapies presenting with declining renal functional reserve and thrombocytopenia.",
+    "vitals": {
+      "blood_pressure": "138/84 mmHg",
+      "heart_rate": 80,
+      "bmi": 29.1
+    },
+    "labs": {
+      "egfr": 42.0,
+      "platelets": 82000,
+      "hba1c": 7.4,
+      "uacr": 410.0,
+      "serum_creatinine": 1.7,
+      "potassium": 4.8,
+      "alt": 35,
+      "ast": 38
+    },
+    "diagnoses": [
+      {
+        "code": "C18.9",
+        "system": "ICD-10",
+        "display": "Malignant neoplasm of colon, unspecified"
+      },
+      {
+        "code": "N18.3",
+        "system": "ICD-10",
+        "display": "Chronic kidney disease, stage 3 (moderate)"
+      }
+    ],
+    "ecog": 2,
+    "medications": [
+      "Amlodipine 5mg daily",
+      "Omeprazole 20mg daily",
+      "Allopurinol 100mg daily"
+    ],
+    "history": {
+      "brain_metastases": false,
+      "type_1_diabetes": false,
+      "history_ketoacidosis": false,
+      "active_infection": false
+    }
+  },
+  "PAT-303": {
+    "patient_id": "PAT-303",
+    "name": "Arthur Pendelton",
+    "gender": "Male",
+    "age": 67,
+    "archetype": "Critical Safety Hazard",
+    "clinical_summary": "67-year-old male with cutaneous melanoma and paroxysmal atrial fibrillation currently anticoagulated on Warfarin. Concurrent antiplatelet therapy induces a severe hemorrhagic contraindication.",
+    "vitals": {
+      "blood_pressure": "144/88 mmHg",
+      "heart_rate": 86,
+      "bmi": 27.8
+    },
+    "labs": {
+      "egfr": 64.0,
+      "platelets": 175000,
+      "hba1c": 8.1,
+      "uacr": 150.0,
+      "serum_creatinine": 1.2,
+      "potassium": 4.6,
+      "alt": 28,
+      "ast": 31
+    },
+    "diagnoses": [
+      {
+        "code": "C43.9",
+        "system": "ICD-10",
+        "display": "Malignant melanoma of skin, unspecified"
+      },
+      {
+        "code": "I48.0",
+        "system": "ICD-10",
+        "display": "Paroxysmal atrial fibrillation"
+      }
+    ],
+    "ecog": 1,
+    "medications": [
+      "Warfarin 5mg daily",
+      "Aspirin 81mg daily",
+      "Metoprolol Tartrate 50mg BID"
+    ],
+    "history": {
+      "brain_metastases": true,
+      "type_1_diabetes": false,
+      "history_ketoacidosis": false,
+      "active_infection": false
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "NCT05912381": {
+    "protocol_id": "NCT05912381",
+    "title": "Phase III Pembrolizumab + Metformin Oncology Study",
+    "short_name": "Pembrolizumab + Metformin Oncology Trial",
+    "phase": "Phase III",
+    "condition": "Advanced Solid Tumors / Non-Small Cell Lung Cancer",
+    "investigational_agent": "Pembrolizumab 200mg IV Q3W + Metformin 1000mg BID",
+    "summary": "Randomized phase III study evaluating the synergistic efficacy of immune checkpoint inhibition combined with metabolic modulation via metformin in refractory advanced oncology patients.",
+    "inclusion_criteria": [
+      {
+        "id": "INC-01",
+        "description": "Patient must be at least 18 years of age at the time of signing informed consent.",
+        "field": "age",
+        "operator": ">=",
+        "target_value": 18,
+        "unit": "years",
+        "rationale": "Adult population required for oncology pharmacokinetic modeling."
+      },
+      {
+        "id": "INC-02",
+        "description": "Estimated Glomerular Filtration Rate (eGFR) >= 50 mL/min/1.73m².",
+        "field": "egfr",
+        "operator": ">=",
+        "target_value": 50.0,
+        "unit": "mL/min/1.73m²",
+        "rationale": "Adequate renal clearance required to avoid lactic acidosis associated with metformin."
+      },
+      {
+        "id": "INC-03",
+        "description": "Platelet count >= 100,000 / µL without transfusion support within 14 days.",
+        "field": "platelets",
+        "operator": ">=",
+        "target_value": 100000.0,
+        "unit": "/ µL",
+        "rationale": "Sufficient bone marrow reserve required prior to immunotherapy initiation."
+      },
+      {
+        "id": "INC-04",
+        "description": "ECOG Performance Status <= 2.",
+        "field": "ecog",
+        "operator": "<=",
+        "target_value": 2,
+        "unit": "score",
+        "rationale": "Ambulatory status and baseline functional capacity adequate for protocol interventions."
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "id": "EXC-01",
+        "description": "Concurrent anticoagulant therapy with Warfarin.",
+        "field": "medications",
+        "operator": "NOT_CONTAINS",
+        "target_value": "WARFARIN",
+        "unit": "string",
+        "rationale": "Severe drug-drug interactions and uncontrolled bleeding hazard with trial agents."
+      },
+      {
+        "id": "EXC-02",
+        "description": "Uncontrolled diabetes with HbA1c > 10.0%.",
+        "field": "hba1c",
+        "operator": "<=",
+        "target_value": 10.0,
+        "unit": "%",
+        "rationale": "Excessive glycemic dysregulation confounds metabolic study endpoints."
+      },
+      {
+        "id": "EXC-03",
+        "description": "Presence of active or untreated brain metastases.",
+        "field": "brain_metastases",
+        "operator": "==",
+        "target_value": false,
+        "unit": "boolean",
+        "rationale": "High risk of intracranial hemorrhage and neurotoxicity during immunotherapy."
+      }
+    ]
+  },
+  "NCT04192831": {
+    "protocol_id": "NCT04192831",
+    "title": "Phase II Diabetic Nephropathy SGLT2 Inhibitor Study",
+    "short_name": "Diabetic Nephropathy SGLT2i Trial",
+    "phase": "Phase II",
+    "condition": "Diabetic Nephropathy / Stage 2-3 Chronic Kidney Disease",
+    "investigational_agent": "Dapagliflozin 10mg Once Daily vs Placebo",
+    "summary": "Placebo-controlled phase II trial investigating renal-protective and albuminuria-lowering effects of SGLT2 inhibition in patients with established diabetic kidney disease.",
+    "inclusion_criteria": [
+      {
+        "id": "INC-01",
+        "description": "Age >= 21 years old.",
+        "field": "age",
+        "operator": ">=",
+        "target_value": 21,
+        "unit": "years",
+        "rationale": "Maturity of diabetic kidney disease presentation."
+      },
+      {
+        "id": "INC-02",
+        "description": "HbA1c <= 9.0% at baseline screening.",
+        "field": "hba1c",
+        "operator": "<=",
+        "target_value": 9.0,
+        "unit": "%",
+        "rationale": "Moderate glycemic control to isolate nephroprotective effects."
+      },
+      {
+        "id": "INC-03",
+        "description": "Urine Albumin-to-Creatinine Ratio (UACR) >= 300 mg/g (Macroalbuminuria).",
+        "field": "uacr",
+        "operator": ">=",
+        "target_value": 300.0,
+        "unit": "mg/g",
+        "rationale": "Confirmed significant proteinuria indicating target diabetic nephropathy phenotype."
+      }
+    ],
+    "exclusion_criteria": [
+      {
+        "id": "EXC-01",
+        "description": "Severe renal failure defined as eGFR < 30 mL/min/1.73m².",
+        "field": "egfr",
+        "operator": ">=",
+        "target_value": 30.0,
+        "unit": "mL/min/1.73m²",
+        "rationale": "Blunted efficacy of SGLT2 inhibitors and heightened risk of acute kidney injury."
+      },
+      {
+        "id": "EXC-02",
+        "description": "Diagnosis of Type 1 Diabetes Mellitus.",
+        "field": "type_1_diabetes",
+        "operator": "==",
+        "target_value": false,
+        "unit": "boolean",
+        "rationale": "Substantial elevated risk of euglycemic diabetic ketoacidosis with SGLT2 inhibitors."
+      },
+      {
+        "id": "EXC-03",
+        "description": "Documented prior history of Diabetic Ketoacidosis (DKA).",
+        "field": "history_ketoacidosis",
+        "operator": "==",
+        "target_value": false,
+        "unit": "boolean",
+        "rationale": "High recurrence liability during SGLT2 inhibition regimen."
+      }
+    ]
+  }
+}
