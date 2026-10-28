@@ -127,15 +127,17 @@ class CriticAgent:
         from src.utils.gemini_service import is_gemini_configured, generate_gemini_clinical_review
 
         gemini_key = state.get("gemini_api_key")
+        gemini_model = state.get("gemini_model", "gemini-2.5-flash")
         if is_gemini_configured(gemini_key):
-            audit_logs.append(f"[{now_str}] [CriticAgent] Engaging Gemini LLM as Senior Clinical Safety Medical Monitor...")
+            audit_logs.append(f"[{now_str}] [CriticAgent] Engaging Gemini LLM as Senior Clinical Safety Medical Monitor ({gemini_model})...")
             llm_narrative = generate_gemini_clinical_review(
                 protocol=protocol,
                 ehr=ehr,
                 match_results=match_results,
                 safety_alerts=safety_alerts,
                 deviation_warnings=deviation_warnings,
-                api_key=gemini_key
+                api_key=gemini_key,
+                model_name=gemini_model
             )
             audit_logs.append(f"[{now_str}] [CriticAgent] Gemini LLM clinical safety narrative successfully generated.")
         else:

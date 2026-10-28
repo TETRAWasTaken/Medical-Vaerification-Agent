@@ -14,14 +14,81 @@ try:
 except ImportError:
     GEMINI_LIB_AVAILABLE = False
 
-# Default models in order of priority
+try:
+    from google import genai
+    GOOGLE_GENAI_AVAILABLE = True
+except ImportError:
+    GOOGLE_GENAI_AVAILABLE = False
+
+# Default models in order of priority (Fastest and officially supported first)
 SUPPORTED_GEMINI_MODELS = [
-    "gemini-flash-latest",
-    "gemini-3.8-flash",
-    "gemini-pro-latest",
     "gemini-2.5-flash",
-    "gemini-1.5-flash"
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash-002",
+    "gemini-1.5-pro",
+    "gemini-1.5-pro-latest",
+    "gemini-1.5-pro-002"
 ]
+
+_MODEL_CACHE: Dict[str, List[str]] = {}
+
+
+def get_available_gemini_models(api_key: Optional[str] = None) -> Tuple[List[str], Optional[str]]:
+    """
+    Dynamically queries Google Generative AI API (ModelService.ListModels) for models authorized
+    for this API key that support generateContent.
+    Returns (models_list, error_message).
+    """
+    resolved_key = resolve_api_key(api_key)
+    if not resolved_key or len(resolved_key) < 5:
+        return [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro"
+        ], None
+
+    if resolved_key in _MODEL_CACHE:
+        return _MODEL_CACHE[resolved_key], None
+
+    if not GOOGLE_GENAI_AVAILABLE:
+        return SUPPORTED_GEMINI_MODELS, None
+
+    try:
+        client = genai.Client(api_key=resolved_key)
+        discovered = []
+        for m in client.models.list():
+            actions = getattr(m, 'supported_actions', []) or []
+            name = m.name.replace('models/', '') if m.name else ''
+            # Filter for generative models (excluding embeddings, imagen, etc.)
+            if 'gemini' in name.lower() and (not actions or 'generateContent' in actions):
+                discovered.append(name)
+
+        if discovered:
+            # Sort prioritized: flash models first, then pro
+            def sort_key(name: str):
+                name_l = name.lower()
+                if "2.5-flash" in name_l:
+                    return 0
+                if "2.0-flash" in name_l:
+                    return 1
+                if "1.5-flash" in name_l:
+                    return 2
+                if "flash" in name_l:
+                    return 3
+                if "pro" in name_l:
+                    return 4
+                return 5
+
+            discovered.sort(key=sort_key)
+            _MODEL_CACHE[resolved_key] = discovered
+            return discovered, None
+
+        return SUPPORTED_GEMINI_MODELS, None
+    except Exception as e:
+        return [], str(e)
 
 
 def resolve_api_key(api_key: Optional[str] = None) -> Optional[str]:
@@ -62,11 +129,14 @@ def extract_text_content(content: Any) -> str:
 
 def get_gemini_llm(
     api_key: Optional[str] = None,
-    model_name: str = "gemini-flash-latest",
-    temperature: float = 0.2
+    model_name: str = "gemini-2.5-flash",
+    temperature: float = 0.2,
+    timeout: float = 15.0,
+    max_retries: int = 1,
+    api_version: Optional[str] = None
 ):
     """
-    Instantiates ChatGoogleGenerativeAI client with specified model and API key.
+    Instantiates ChatGoogleGenerativeAI client with specified model, low latency timeouts, and API key.
     """
     if not GEMINI_LIB_AVAILABLE:
         return None
@@ -75,13 +145,21 @@ def get_gemini_llm(
     if not key:
         return None
 
+    # Sanitize model name (strip descriptions like "(Fastest)")
+    clean_model = model_name.split()[0].strip() if model_name else "gemini-2.5-flash"
+
     try:
-        return ChatGoogleGenerativeAI(
-            model=model_name,
-            google_api_key=key,
-            temperature=temperature,
-            max_output_tokens=1024
-        )
+        kwargs: Dict[str, Any] = {
+            "model": clean_model,
+            "google_api_key": key,
+            "temperature": temperature,
+            "max_output_tokens": 768,
+            "timeout": timeout,
+            "max_retries": max_retries
+        }
+        if api_version:
+            kwargs["api_version"] = api_version
+        return ChatGoogleGenerativeAI(**kwargs)
     except Exception:
         return None
 
@@ -93,12 +171,12 @@ def generate_gemini_clinical_review(
     safety_alerts: List[str],
     deviation_warnings: List[str],
     api_key: Optional[str] = None,
-    model_name: str = "gemini-flash-latest"
+    model_name: str = "gemini-2.5-flash"
 ) -> str:
     """
     Uses Gemini LLM to synthesize an expert Clinical Safety Medical Monitor review,
     analyzing patient physiology, drug contraindications, and protocol deviations.
-    Automatically tries fallback models if the requested model returns NOT_FOUND.
+    Automatically queries authorized models and tries fallback models if the requested model returns NOT_FOUND.
     """
     resolved_key = resolve_api_key(api_key)
     if not resolved_key:
@@ -176,26 +254,70 @@ Keep the commentary professional, high-density, and actionable for the Principal
         HumanMessage(content=user_prompt)
     ]
 
-    # Models to attempt, putting requested model first
-    models_to_try = [model_name] + [m for m in SUPPORTED_GEMINI_MODELS if m != model_name]
+    # Sanitize requested model name
+    clean_requested = model_name.split()[0].strip() if model_name else "gemini-2.5-flash"
+
+    # Query dynamic available models for this specific API key
+    discovered_models, list_err = get_available_gemini_models(resolved_key)
+
+    if discovered_models:
+        candidate_pool = [clean_requested] + [m for m in discovered_models if m != clean_requested]
+    else:
+        candidate_pool = [
+            clean_requested,
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-flash-002",
+            "gemini-1.5-pro",
+            "gemini-1.5-pro-latest"
+        ]
+
+    # Deduplicate candidate pool
+    models_to_try: List[str] = []
+    for m in candidate_pool:
+        if m not in models_to_try:
+            models_to_try.append(m)
 
     last_error = None
     for target_model in models_to_try:
-        try:
-            llm = get_gemini_llm(api_key=resolved_key, model_name=target_model)
-            if not llm:
-                continue
-            response = llm.invoke(messages)
-            text_result = extract_text_content(response.content)
-            if text_result:
-                return text_result
-        except Exception as e:
-            last_error = e
-            # If model is not found, continue to next supported candidate
-            err_str = str(e)
-            if "NOT_FOUND" in err_str or "404" in err_str:
-                continue
-            # For other errors (e.g. invalid key quota), return error immediately
-            return f"Gemini API execution error ({target_model}): {err_str}"
+        # First attempt with default API version
+        for api_ver in [None, "v1"]:
+            try:
+                llm = get_gemini_llm(
+                    api_key=resolved_key,
+                    model_name=target_model,
+                    timeout=12.0,
+                    max_retries=1,
+                    api_version=api_ver
+                )
+                if not llm:
+                    continue
+                response = llm.invoke(messages)
+                text_result = extract_text_content(response.content)
+                if text_result:
+                    return text_result
+            except Exception as e:
+                last_error = e
+                err_str = str(e)
+                # If model is not found or timed out, proceed to next variant or candidate immediately
+                if any(indicator in err_str.upper() for indicator in ["NOT_FOUND", "404", "TIMEOUT", "DEADLINE"]):
+                    continue
+                # For non-404 errors (e.g., quota limits or invalid keys), return early with diagnosis
+                if "INVALID_ARGUMENT" in err_str or "API_KEY_INVALID" in err_str:
+                    return "Gemini API Error: The provided Gemini API key is invalid. Please verify and re-enter your key."
+                if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
+                    return "Gemini API Quota Exceeded (429): Your free tier request rate limit was reached. Please wait a minute and re-try."
+                return f"Gemini API execution error ({target_model}): {err_str}"
+
+    if last_error and ("404" in str(last_error) or "NOT_FOUND" in str(last_error)):
+        return (
+            "Gemini API Error (404 NOT_FOUND): None of the requested Gemini models were found for this API key. "
+            "This usually occurs when the Google Cloud Project does not have the 'Generative Language API' enabled, "
+            "or when using an API key from an enterprise/restricted GCP project. "
+            "To fix this, please create a free API key directly at Google AI Studio (https://aistudio.google.com/app/apikey) "
+            "where Generative Language API model endpoints are enabled by default."
+        )
 
     return f"Gemini API error: {str(last_error)}. Please verify your Gemini API key and model permissions."

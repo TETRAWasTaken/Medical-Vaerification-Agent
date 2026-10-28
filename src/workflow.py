@@ -53,7 +53,8 @@ _COMPILED_APP = _build_langgraph_workflow() if LANGGRAPH_AVAILABLE else None
 def run_audit_workflow(
     patient_raw_data: Dict[str, Any],
     protocol: Dict[str, Any],
-    gemini_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None,
+    gemini_model: Optional[str] = "gemini-2.5-flash"
 ) -> AgentState:
     """
     Synchronously runs the complete multi-agent clinical trial auditor workflow.
@@ -78,6 +79,7 @@ def run_audit_workflow(
         "safety_alerts": [],
         "llm_safety_narrative": "",
         "gemini_api_key": resolved_key,
+        "gemini_model": gemini_model or "gemini-2.5-flash",
         "audit_logs": []
     }
 
@@ -107,7 +109,8 @@ def _run_pure_python_pipeline(state: AgentState) -> AgentState:
 def run_audit_workflow_streaming(
     patient_raw_data: Dict[str, Any],
     protocol: Dict[str, Any],
-    gemini_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None,
+    gemini_model: Optional[str] = "gemini-2.5-flash"
 ) -> Generator[Tuple[str, str, AgentState], None, AgentState]:
     """
     Generator that yields (agent_name, step_description, current_state) at each node execution,
@@ -133,6 +136,7 @@ def run_audit_workflow_streaming(
         "safety_alerts": [],
         "llm_safety_narrative": "",
         "gemini_api_key": resolved_key,
+        "gemini_model": gemini_model or "gemini-2.5-flash",
         "audit_logs": []
     }
 

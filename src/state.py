@@ -20,4 +20,5 @@ class AgentState(TypedDict, total=False):
     safety_alerts: List[str]
     llm_safety_narrative: str
     gemini_api_key: str
+    gemini_model: str
     audit_logs: List[str]

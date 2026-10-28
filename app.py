@@ -15,6 +15,7 @@ if CURRENT_DIR not in sys.path:
 
 from src.workflow import run_audit_workflow_streaming, run_audit_workflow
 from src.utils.pdf_exporter import generate_audit_pdf, export_audit_json
+from src.utils.gemini_service import get_available_gemini_models
 
 # --- Streamlit Page Configuration ---
 st.set_page_config(
@@ -285,14 +286,35 @@ with st.sidebar:
         type="password",
         help="Paste your Google Gemini API key here to activate AI-powered Clinical Safety Medical Monitor reviews."
     )
+    discovered_models, key_err = get_available_gemini_models(gemini_key_input.strip() if gemini_key_input else None)
+
+    if discovered_models and len(discovered_models) > 0:
+        model_options = discovered_models
+    else:
+        model_options = [
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro"
+        ]
+
     gemini_model_choice = st.selectbox(
         "Gemini Model",
-        ["gemini-flash-latest", "gemini-3.8-flash", "gemini-pro-latest"],
-        index=0
+        model_options,
+        index=0,
+        help="Model options are dynamically retrieved from your Google Gemini account."
     )
 
     if gemini_key_input and len(gemini_key_input.strip()) > 5:
-        st.markdown('<span class="badge-pill badge-emerald">🟢 Gemini LLM Active</span>', unsafe_allow_html=True)
+        if key_err:
+            if "INVALID" in key_err.upper():
+                st.error("⚠️ Invalid Gemini API Key. Please verify for typos.")
+            elif any(s in key_err.upper() for s in ["404", "403", "PERMISSION", "NOT_FOUND"]):
+                st.warning("⚠️ Generative Language API not active on this Google Cloud Project. Recommend getting a free unrestricted key at [aistudio.google.com](https://aistudio.google.com/app/apikey).")
+            else:
+                st.markdown('<span class="badge-pill badge-emerald">🟢 Gemini LLM Active</span>', unsafe_allow_html=True)
+        else:
+            st.markdown('<span class="badge-pill badge-emerald">🟢 Gemini LLM Active</span>', unsafe_allow_html=True)
     else:
         st.markdown('<span class="badge-pill badge-blue">⚪ Deterministic (Key Optional)</span>', unsafe_allow_html=True)
 
@@ -320,7 +342,7 @@ with st.sidebar:
     run_audit_clicked = st.button("Run Multi-Agent Audit", type="primary", use_container_width=True)
 
 # --- Execution Management in Session State ---
-state_key = f"audit_state_{selected_proto_id}_{selected_preset}_{age_input}_{egfr_input}_{platelets_input}_{hba1c_input}_{brain_met_input}_{len(meds_list)}"
+state_key = f"audit_state_{selected_proto_id}_{selected_preset}_{age_input}_{egfr_input}_{platelets_input}_{hba1c_input}_{brain_met_input}_{len(meds_list)}_{gemini_model_choice}"
 
 if run_audit_clicked or "current_audit_state" not in st.session_state:
     try:
@@ -328,7 +350,8 @@ if run_audit_clicked or "current_audit_state" not in st.session_state:
             stream_gen = run_audit_workflow_streaming(
                 active_patient,
                 current_protocol,
-                gemini_api_key=gemini_key_input.strip() if gemini_key_input else None
+                gemini_api_key=gemini_key_input.strip() if gemini_key_input else None,
+                gemini_model=gemini_model_choice
             )
             final_state = None
             for agent_id, desc, curr_state in stream_gen:
@@ -340,7 +363,8 @@ if run_audit_clicked or "current_audit_state" not in st.session_state:
         final_state = run_audit_workflow(
             active_patient,
             current_protocol,
-            gemini_api_key=gemini_key_input.strip() if gemini_key_input else None
+            gemini_api_key=gemini_key_input.strip() if gemini_key_input else None,
+            gemini_model=gemini_model_choice
         )
 
     st.session_state["current_audit_state"] = final_state

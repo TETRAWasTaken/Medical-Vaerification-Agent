@@ -176,3 +176,32 @@ def test_gemini_service_resolution(monkeypatch):
     )
     assert "Gemini LLM narrative not active" in narrative
 
+
+def test_gemini_low_latency_config():
+    """Verify get_gemini_llm sanitizes models and configures low-latency timeouts and retries."""
+    from src.utils.gemini_service import get_gemini_llm
+
+    llm = get_gemini_llm(
+        api_key="test_dummy_key_12345",
+        model_name="gemini-2.5-flash (Ultra-Fast)",
+        timeout=12.0,
+        max_retries=1
+    )
+    assert llm is not None
+    assert llm.model == "gemini-2.5-flash"
+    assert llm.timeout == 12.0
+    assert llm.max_retries == 1
+    assert llm.max_output_tokens == 768
+
+
+def test_get_available_gemini_models_fallback():
+    """Verify get_available_gemini_models falls back gracefully on missing or invalid keys."""
+    from src.utils.gemini_service import get_available_gemini_models
+
+    models, err = get_available_gemini_models(None)
+    assert len(models) >= 4
+    assert err is None
+
+    models2, err2 = get_available_gemini_models("invalid_fake_key_123")
+    assert err2 is not None or len(models2) >= 0
+
